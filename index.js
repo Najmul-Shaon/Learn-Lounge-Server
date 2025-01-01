@@ -81,6 +81,18 @@ async function run() {
       res.send(result);
     });
 
+    //   submit assignment
+    const submitCollection = client
+      .db("learnLoungeDB")
+      .collection("submitedAssignments");
+
+    app.post("/assignment/submit", async (req, res) => {
+      const submittedAssignment = req.body;
+      console.log(submittedAssignment);
+      const result = await submitCollection.insertOne(submittedAssignment);
+      res.send(result);
+    });
+
     //   delete assignment
     app.delete("/assignment/:id", async (req, res) => {
       const id = req.params.id;
