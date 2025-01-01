@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
 const app = express();
@@ -39,6 +39,54 @@ async function run() {
       const result = await assignmentsCollection.insertOne(newAssignment);
       res.send(result);
       console.log(newAssignment);
+    });
+
+    //   get assignment
+    app.get("/assignments", async (req, res) => {
+      const result = await assignmentsCollection.find().toArray();
+      res.send(result);
+    });
+
+    //   get single (specific by id) assignment
+    app.get("/assignment/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await assignmentsCollection.findOne(query);
+      res.send(result);
+    });
+
+    //   update assignment by id
+    app.put("/assignment/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedAssignment = req.body;
+      const newAssignment = {
+        $set: {
+          title: updatedAssignment.title,
+          phoroUrl: updatedAssignment.phoroUrl,
+          marks: updatedAssignment.marks,
+          description: updatedAssignment.description,
+          type: updatedAssignment.type,
+          formatedDeadline: updatedAssignment.formatedDeadline,
+          userName: updatedAssignment.userName,
+          userMail: updatedAssignment.userMail,
+        },
+      };
+      const result = await assignmentsCollection.updateOne(
+        filter,
+        newAssignment,
+        options
+      );
+      res.send(result);
+    });
+
+    //   delete assignment
+    app.delete("/assignment/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await assignmentsCollection.deleteOne(query);
+      res.send(result);
     });
 
     //   users api
