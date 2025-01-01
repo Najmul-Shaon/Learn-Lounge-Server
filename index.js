@@ -29,6 +29,18 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
 
+    //   assignments api
+    const assignmentsCollection = client
+      .db("learnLoungeDB")
+      .collection("assignments");
+
+    app.post("/assignments", async (req, res) => {
+      const newAssignment = req.body;
+      const result = await assignmentsCollection.insertOne(newAssignment);
+      res.send(result);
+      console.log(newAssignment);
+    });
+
     //   users api
     const usersCollection = client.db("learnLoungeDB").collection("users");
 
