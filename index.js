@@ -62,7 +62,6 @@ async function run() {
       const result = await submitCollection.find(query).toArray();
       // find by assignment id
       for (const assignment of result) {
-        console.log(assignment.assignmentId);
         const assignmentQuery = { _id: new ObjectId(assignment.assignmentId) };
         const finalResult = await assignmentsCollection.findOne(
           assignmentQuery
@@ -80,8 +79,6 @@ async function run() {
       const query = { "assignmentInfo.isPending": true };
       const result = await submitCollection.find(query).toArray();
       for (const pendingAssignmentDetails of result) {
-        console.log(pendingAssignmentDetails.userMail);
-
         const pendingAssignmentQuery = {
           _id: new ObjectId(pendingAssignmentDetails.assignmentId),
         };
@@ -104,6 +101,22 @@ async function run() {
           pendingAssignmentDetails.name = finalResultOfUserName.name;
         }
       }
+      res.send(result);
+    });
+
+    // assignment mark, feedback and status update api
+    app.patch("/assignment/update/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          "assignmentInfo.isPending": data.isPending,
+          "assignmentInfo.obtainMark": data.obtainMark,
+          "assignmentInfo.feedback": data.feedback,
+        },
+      };
+      const result = await submitCollection.updateMany(filter, updatedDoc);
       res.send(result);
     });
 
