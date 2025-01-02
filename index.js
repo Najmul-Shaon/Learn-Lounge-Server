@@ -79,6 +79,31 @@ async function run() {
     app.get("/assignments/pending", async (req, res) => {
       const query = { "assignmentInfo.isPending": true };
       const result = await submitCollection.find(query).toArray();
+      for (const pendingAssignmentDetails of result) {
+        console.log(pendingAssignmentDetails.userMail);
+
+        const pendingAssignmentQuery = {
+          _id: new ObjectId(pendingAssignmentDetails.assignmentId),
+        };
+
+        const finalResultOfAssignmentInfo = await assignmentsCollection.findOne(
+          pendingAssignmentQuery
+        );
+
+        const pendingAssignmentUserQuery = {
+          email: pendingAssignmentDetails.userMail,
+        };
+
+        const finalResultOfUserName = await usersCollection.findOne(
+          pendingAssignmentUserQuery
+        );
+
+        if (finalResultOfAssignmentInfo) {
+          pendingAssignmentDetails.title = finalResultOfAssignmentInfo.title;
+          pendingAssignmentDetails.marks = finalResultOfAssignmentInfo.marks;
+          pendingAssignmentDetails.name = finalResultOfUserName.name;
+        }
+      }
       res.send(result);
     });
 
