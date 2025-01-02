@@ -75,6 +75,13 @@ async function run() {
       res.send(result);
     });
 
+    // create pending assignment api
+    app.get("/assignments/pending", async (req, res) => {
+      const query = { "assignmentInfo.isPending": true };
+      const result = await submitCollection.find(query).toArray();
+      res.send(result);
+    });
+
     //   update assignment by id
     app.put("/assignment/:id", async (req, res) => {
       const id = req.params.id;
