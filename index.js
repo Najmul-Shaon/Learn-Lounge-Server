@@ -55,6 +55,26 @@ async function run() {
       res.send(result);
     });
 
+    // get my submitted assignment by userMail
+    app.get("/assignments/submitted", async (req, res) => {
+      const email = req.query.email;
+      const query = { userMail: email };
+      const result = await submitCollection.find(query).toArray();
+      // find by assignment id
+      for (const assignment of result) {
+        console.log(assignment.assignmentId);
+        const assignmentQuery = { _id: new ObjectId(assignment.assignmentId) };
+        const finalResult = await assignmentsCollection.findOne(
+          assignmentQuery
+        );
+        if (finalResult) {
+          assignment.title = finalResult.title;
+          assignment.marks = finalResult.marks;
+        }
+      }
+      res.send(result);
+    });
+
     //   update assignment by id
     app.put("/assignment/:id", async (req, res) => {
       const id = req.params.id;
