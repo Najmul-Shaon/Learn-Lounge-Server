@@ -38,7 +38,6 @@ async function run() {
       const newAssignment = req.body;
       const result = await assignmentsCollection.insertOne(newAssignment);
       res.send(result);
-      console.log(newAssignment);
     });
 
     //   get assignment
@@ -153,7 +152,6 @@ async function run() {
 
     app.post("/assignment/submit", async (req, res) => {
       const submittedAssignment = req.body;
-      console.log(submittedAssignment);
       const result = await submitCollection.insertOne(submittedAssignment);
       res.send(result);
     });
@@ -171,7 +169,6 @@ async function run() {
 
     app.post("/users", async (req, res) => {
       const newUser = req.body;
-      console.log("creating new user", newUser);
       const result = await usersCollection.insertOne(newUser);
       res.send(result);
     });
