@@ -16,6 +16,31 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+const verifyToken = (req, res, next) => {
+  // const token = res.cookies?.token;
+  const token = req.cookies?.token;
+
+  if (!token) {
+    return res
+      .status(401)
+      .send({ message: "unauthorized access from outside" });
+  }
+
+  jwt.verify(token, process.env.ACCESS_TOKEN, (error, decoded) => {
+    if (error) {
+      return res
+        .status(401)
+        .send({ message: "unauthorized access from nested" });
+    }
+
+    req.user = decoded;
+
+    next();
+  });
+
+  console.log(token);
+};
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.cwzf5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -61,8 +86,8 @@ async function run() {
     const assignmentsCollection = client
       .db("learnLoungeDB")
       .collection("assignments");
-
-    app.post("/assignments", async (req, res) => {
+    // create assignment
+    app.post("/assignments", verifyToken, async (req, res) => {
       const newAssignment = req.body;
       const result = await assignmentsCollection.insertOne(newAssignment);
       res.send(result);
@@ -74,8 +99,8 @@ async function run() {
       res.send(result);
     });
 
-    //   get single (specific by id) assignment
-    app.get("/assignment/:id", async (req, res) => {
+    //   get single (specific by id) assignment for assignment details
+    app.get("/assignment/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await assignmentsCollection.findOne(query);
@@ -83,9 +108,16 @@ async function run() {
     });
 
     // get my submitted assignment by userMail
-    app.get("/assignments/submitted", async (req, res) => {
+    app.get("/assignments/submitted", verifyToken, async (req, res) => {
       const email = req.query.email;
       const query = { userMail: email };
+
+      // console.log(req.cookies?.token);
+
+      if (req.user.email !== req.query.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+
       const result = await submitCollection.find(query).toArray();
       // find by assignment id
       for (const assignment of result) {
@@ -102,7 +134,7 @@ async function run() {
     });
 
     // create pending assignment api
-    app.get("/assignments/pending", async (req, res) => {
+    app.get("/assignments/pending", verifyToken, async (req, res) => {
       const query = { "assignmentInfo.isPending": true };
       const result = await submitCollection.find(query).toArray();
       for (const pendingAssignmentDetails of result) {
