@@ -17,7 +17,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 const verifyToken = (req, res, next) => {
-  // const token = res.cookies?.token;
   const token = req.cookies?.token;
 
   if (!token) {
@@ -112,8 +111,6 @@ async function run() {
       const email = req.query.email;
       const query = { userMail: email };
 
-      // console.log(req.cookies?.token);
-
       if (req.user.email !== req.query.email) {
         return res.status(403).send({ message: "forbidden access" });
       }
@@ -130,6 +127,14 @@ async function run() {
           assignment.marks = finalResult.marks;
         }
       }
+      res.send(result);
+    });
+
+    // get user info by email
+    app.get("/user", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await usersCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -240,7 +245,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send(`server is running at ${port}}`);
+  res.send(`server is running at ${port}`);
 });
 
 app.listen(port, () => {
