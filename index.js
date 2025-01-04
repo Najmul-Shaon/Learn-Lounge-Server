@@ -36,8 +36,6 @@ const verifyToken = (req, res, next) => {
 
     next();
   });
-
-  console.log(token);
 };
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.cwzf5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -94,8 +92,20 @@ async function run() {
 
     //   get assignment
     app.get("/assignments", async (req, res) => {
-      const result = await assignmentsCollection.find().toArray();
+      const filter = req.query.filter;
+      const search = req.query.search;
+
+      const query = {};
+      if (search) {
+        query.title = { $regex: search };
+      }
+
+      if (filter && filter !== "All type") {
+        query.type = filter;
+      }
+      const result = await assignmentsCollection.find(query).toArray();
       res.send(result);
+      
     });
 
     //   get single (specific by id) assignment for assignment details
