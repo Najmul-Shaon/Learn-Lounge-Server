@@ -9,7 +9,11 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://simple-firebase-fa91e.web.app",
+      "https://simple-firebase-fa91e.firebaseapp.com",
+    ],
     credentials: true,
   })
 );
@@ -52,12 +56,12 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
 
     // auth related api
     app.post("/jwt", (req, res) => {
@@ -67,7 +71,11 @@ async function run() {
       });
 
       res
-        .cookie("token", token, { httpOnly: true, secure: false })
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
         .send({ success: true });
     });
 
@@ -75,7 +83,8 @@ async function run() {
       res
         .clearCookie("token", {
           httpOnly: true,
-          secure: false,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({ success: true });
     });
@@ -97,7 +106,7 @@ async function run() {
 
       const query = {};
       if (search) {
-        query.title = { $regex: search };
+        query.title = { $regex: search, $options: "i" };
       }
 
       if (filter && filter !== "All type") {
@@ -105,7 +114,6 @@ async function run() {
       }
       const result = await assignmentsCollection.find(query).toArray();
       res.send(result);
-      
     });
 
     //   get single (specific by id) assignment for assignment details
