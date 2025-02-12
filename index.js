@@ -51,13 +51,13 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // // Connect the client to the server	(optional starting in v4.7)
+    // await client.connect();
+    // // Send a ping to confirm a successful connection
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
 
     // auth related api
     app.post("/jwt", (req, res) => {
@@ -124,7 +124,8 @@ async function run() {
     });
 
     //   get single (specific by id) assignment for assignment details
-    app.get("/assignment/:id", verifyToken, async (req, res) => {
+    // app.get("/assignment/:id", verifyToken, async (req, res) => {
+    app.get("/assignment/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await assignmentsCollection.findOne(query);
@@ -157,15 +158,6 @@ async function run() {
 
     // get all stats
     app.get("/stats", async (req, res) => {
-      // try {
-      //   const assignmentCount =
-      //     await assignmentsCollection.estimatedDocumentCount();
-      //   const usersCount = await usersCollection.estimatedDocumentCount();
-      //   const submittedCount = await submitCollection.estimatedDocumentCount();
-      //   const pendingCount = await submitCollection.countDocuments({
-      //     "assignmentInfo.isPending": true,
-      //   });
-
       try {
         const [assignmentCount, usersCount, submittedCount, pendingCount] =
           await Promise.all([
