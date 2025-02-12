@@ -9,11 +9,7 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://simple-firebase-fa91e.web.app",
-      "https://simple-firebase-fa91e.firebaseapp.com",
-    ],
+    origin: ["http://localhost:5173", "https://learn--lounge.web.app"],
     credentials: true,
   })
 );
@@ -56,12 +52,12 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
+    await client.connect();
     // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
-    // console.log(
-    //   "Pinged your deployment. You successfully connected to MongoDB!"
-    // );
+    await client.db("admin").command({ ping: 1 });
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
 
     // auth related api
     app.post("/jwt", (req, res) => {
@@ -103,8 +99,19 @@ async function run() {
     app.get("/assignments", async (req, res) => {
       const filter = req.query.filter;
       const search = req.query.search;
+      const max = req.query.max;
+      const intMax = parseInt(max);
 
       const query = {};
+
+      if (max) {
+        const result = await assignmentsCollection
+          .find()
+          .limit(intMax)
+          .toArray();
+        return res.send(result);
+      }
+
       if (search) {
         query.title = { $regex: search, $options: "i" };
       }
@@ -146,6 +153,40 @@ async function run() {
         }
       }
       res.send(result);
+    });
+
+    // get all stats
+    app.get("/stats", async (req, res) => {
+      // try {
+      //   const assignmentCount =
+      //     await assignmentsCollection.estimatedDocumentCount();
+      //   const usersCount = await usersCollection.estimatedDocumentCount();
+      //   const submittedCount = await submitCollection.estimatedDocumentCount();
+      //   const pendingCount = await submitCollection.countDocuments({
+      //     "assignmentInfo.isPending": true,
+      //   });
+
+      try {
+        const [assignmentCount, usersCount, submittedCount, pendingCount] =
+          await Promise.all([
+            assignmentsCollection.countDocuments(),
+            usersCollection.countDocuments(),
+            submitCollection.countDocuments(),
+            submitCollection.countDocuments({
+              "assignmentInfo.isPending": true,
+            }),
+          ]);
+
+        res.json({
+          assignmentCount,
+          usersCount,
+          submittedCount,
+          pendingCount,
+        }); // Extract the first object from the array and send as JSON
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        res.status(500).json({ error: "Internal server error" });
+      }
     });
 
     // get user info by email
@@ -267,5 +308,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log("server running");
+  console.log(`server running ${port}`);
 });
